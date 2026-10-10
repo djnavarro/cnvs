@@ -10,3 +10,4 @@ src/*.dll
 src/*.rds
 src/Makedeps
 
+docs
