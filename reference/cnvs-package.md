@@ -32,7 +32,8 @@ The package's C source, in `src/`, is organised by responsibility:
 
 - `write.c` – the HTML/JS text templates everything else writes into.
 
-See [`cnvs()`](reference/cnvs.md) to open a device.
+See [`cnvs()`](https://cnvs.djnavarro.net/reference/cnvs.md) to open a
+device.
 
 ## Author
 
