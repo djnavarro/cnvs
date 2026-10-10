@@ -2,7 +2,7 @@ Package: cnvs
 Title: An HTML Canvas Graphics Device
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+    person("Danielle", "Navarro", , "djnavarro@protonmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7648-6578"))
 Description: A custom R graphics device, written for learning purposes, that
     renders base/grid graphics as JavaScript 'CanvasRenderingContext2D' calls
     embedded in a standalone HTML file. The point of the package is not to be
@@ -12,12 +12,15 @@ Description: A custom R graphics device, written for learning purposes, that
     documentation (see 'R_ext/GraphicsDevice.h' and 'R_ext/GraphicsEngine.h'
     in the R sources).
 License: MIT + file LICENSE
+Language: en-GB
 Imports:
     grDevices
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Config/Needs/website: djnavarro/waeponwifestre, rmarkdown
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.0
-URL: http://djnavarro.net/cnvs/
+URL: https://github.com/djnavarro/cnvs, https://cnvs.djnavarro.net/
+BugReports: https://github.com/djnavarro/cnvs/issues
