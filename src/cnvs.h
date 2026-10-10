@@ -7,7 +7,7 @@
  * to remember "where are we writing output to" between calls, and declares
  * every function that the different .c files need to share.
  *
- * The three source files are organised by what they are responsible for:
+ * The source files are organised by what they are responsible for:
  *   - write.c   turns "start a page" / "end a page" into HTML/JS text
  *   - colour.c  turns R graphics-parameter values (colours, line styles,
  *               fonts) into the equivalent CSS/JS text
@@ -38,11 +38,11 @@
  * --------------------------------------------------------------------- */
 typedef struct {
     FILE *fp;              /* the open .html file we are writing to */
-    int width;              /* device width, in CSS pixels */
-    int height;             /* device height, in CSS pixels */
-    int page_count;          /* how many <canvas> pages we've started so far */
-    Rboolean clip_active;   /* TRUE if we've done ctx.save()+ctx.clip() since
-                              * the last matching ctx.restore() */
+    int width;             /* device width, in CSS pixels */
+    int height;            /* device height, in CSS pixels */
+    int page_count;        /* how many <canvas> pages we've started so far */
+    Rboolean clip_active;  /* TRUE if we've done ctx.save()+ctx.clip() since
+                            * the last matching ctx.restore() */
 } cnvs_context;
 
 /* Convenience accessor: fetch our struct back out of a pDevDesc. */

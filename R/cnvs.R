@@ -28,8 +28,11 @@
 #' # browseURL(f) # to view the result in a browser
 #'
 #' @export
-cnvs <- function(file = "cnvs.html", width = 480, height = 480,
-                  pointsize = 12, bg = "white") {
+cnvs <- function(file = "cnvs.html", 
+                 width = 480, 
+                 height = 480,
+                 pointsize = 12, 
+                 bg = "white") {
   stopifnot(
     is.character(file), length(file) == 1, !is.na(file),
     is.numeric(width), length(width) == 1, width > 0,
