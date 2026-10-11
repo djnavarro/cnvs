@@ -35,10 +35,22 @@ The package's C source, in `src/`, is organised by responsibility:
 See [`cnvs()`](https://cnvs.djnavarro.net/reference/cnvs.md) to open a
 device.
 
+## See also
+
+Useful links:
+
+- <https://github.com/djnavarro/cnvs>
+
+- <https://cnvs.djnavarro.net/>
+
+- Report bugs at <https://github.com/djnavarro/cnvs/issues>
+
 ## Author
 
-**Maintainer**: First Last <first.last@example.com>
+**Maintainer**: Danielle Navarro <djnavarro@protonmail.com>
+([ORCID](https://orcid.org/0000-0001-7648-6578))
 
 Authors:
 
-- First Last <first.last@example.com>
+- Danielle Navarro <djnavarro@protonmail.com>
+  ([ORCID](https://orcid.org/0000-0001-7648-6578))

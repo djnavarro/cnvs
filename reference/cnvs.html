@@ -70,7 +70,9 @@ canvases stacked down the page. Close the device with
 <span>  width <span class="op">=</span> <span class="fl">480</span>,</span>
 <span>  height <span class="op">=</span> <span class="fl">480</span>,</span>
 <span>  pointsize <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  bg <span class="op">=</span> <span class="st">"white"</span></span>
+<span>  bg <span class="op">=</span> <span class="st">"white"</span>,</span>
+<span>  standalone <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  id_prefix <span class="op">=</span> <span class="st">"cnvs-page"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -96,6 +98,26 @@ following the same convention as <code><a href="https://rdrr.io/r/grDevices/pdf.
 <dd><p>Default background colour, as a colour name or other value
 accepted by <code><a href="https://rdrr.io/r/grDevices/col2rgb.html" class="external-link">grDevices::col2rgb()</a></code>.</p></dd>
 
+
+<dt id="arg-standalone">standalone<a class="anchor" aria-label="anchor" href="#arg-standalone"></a></dt>
+<dd><p>If <code>TRUE</code> (the default), <code>file</code> is written as a
+complete, self-contained HTML document – <code>&lt;html&gt;</code>/<code>&lt;head&gt;</code>/<code>&lt;body&gt;</code>
+and all – that can be opened directly in a browser. If <code>FALSE</code>, only
+the <code>&lt;canvas&gt;</code>/<code>&lt;script&gt;</code> block for each page is written, with no
+surrounding document; this is meant for embedding the output as a
+fragment inside a larger HTML page you already have (for instance, a
+knitted Quarto or R Markdown document), not for opening on its own.</p></dd>
+
+
+<dt id="arg-id-prefix">id_prefix<a class="anchor" aria-label="anchor" href="#arg-id-prefix"></a></dt>
+<dd><p>Base string used to build each page's <code>&lt;canvas&gt;</code> element
+<code>id</code> (page <em>n</em> gets <code>id = paste0(id_prefix, "-", n)</code>). The default,
+<code>"cnvs-page"</code>, is fine for a single device writing its own file. Supply
+a distinct value per device when embedding more than one <code>cnvs()</code>
+fragment (<code>standalone = FALSE</code>) into the same host HTML document –
+e.g. one call per code chunk in a Quarto/R Markdown document – so
+their <code>&lt;canvas&gt;</code> ids don't collide.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -109,8 +131,8 @@ graphics device.</p>
 <span class="r-in"><span><span class="fu">cnvs</span><span class="op">(</span><span class="va">f</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, main <span class="op">=</span> <span class="st">"cnvs demo"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/grDevices/dev.html" class="external-link">dev.off</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> agg_record_196025cc6186 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> agg_record_195e4ca3fbd </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      2 </span>
 <span class="r-in"><span><span class="co"># browseURL(f) # to view the result in a browser</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

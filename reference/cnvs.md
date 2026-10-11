@@ -19,7 +19,9 @@ cnvs(
   width = 480,
   height = 480,
   pointsize = 12,
-  bg = "white"
+  bg = "white",
+  standalone = TRUE,
+  id_prefix = "cnvs-page"
 )
 ```
 
@@ -46,6 +48,26 @@ cnvs(
   Default background colour, as a colour name or other value accepted by
   [`grDevices::col2rgb()`](https://rdrr.io/r/grDevices/col2rgb.html).
 
+- standalone:
+
+  If `TRUE` (the default), `file` is written as a complete,
+  self-contained HTML document – `<html>`/`<head>`/`<body>` and all –
+  that can be opened directly in a browser. If `FALSE`, only the
+  `<canvas>`/`<script>` block for each page is written, with no
+  surrounding document; this is meant for embedding the output as a
+  fragment inside a larger HTML page you already have (for instance, a
+  knitted Quarto or R Markdown document), not for opening on its own.
+
+- id_prefix:
+
+  Base string used to build each page's `<canvas>` element `id` (page
+  *n* gets `id = paste0(id_prefix, "-", n)`). The default,
+  `"cnvs-page"`, is fine for a single device writing its own file.
+  Supply a distinct value per device when embedding more than one
+  `cnvs()` fragment (`standalone = FALSE`) into the same host HTML
+  document – e.g. one call per code chunk in a Quarto/R Markdown
+  document – so their `<canvas>` ids don't collide.
+
 ## Value
 
 Invisibly, `NULL`. Called for the side effect of opening a new graphics
@@ -58,7 +80,7 @@ f <- tempfile(fileext = ".html")
 cnvs(f)
 plot(1:10, main = "cnvs demo")
 dev.off()
-#> agg_record_196025cc6186 
-#>                       2 
+#> agg_record_195e4ca3fbd 
+#>                      2 
 # browseURL(f) # to view the result in a browser
 ```
