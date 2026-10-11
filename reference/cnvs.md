@@ -58,7 +58,7 @@ f <- tempfile(fileext = ".html")
 cnvs(f)
 plot(1:10, main = "cnvs demo")
 dev.off()
-#> agg_record_19651f558858 
+#> agg_record_19532bd8535e 
 #>                       2 
 # browseURL(f) # to view the result in a browser
 ```
