@@ -68,6 +68,17 @@ void cnvs_NewPage(const pGEcontext gc, pDevDesc dd);
 void cnvs_Size(double *left, double *right, double *bottom, double *top, pDevDesc dd);
 void cnvs_Mode(int mode, pDevDesc dd);
 
+/* --- device.c: no-op stubs for the "definitions" (R_GE_version >= 13)
+ * callback group (patterns, clipping paths, masks). See the long comment
+ * next to their registration in cnvs_setup_callbacks() for why these
+ * cannot simply be left as NULL. */
+SEXP cnvs_SetPattern(SEXP pattern, pDevDesc dd);
+void cnvs_ReleasePattern(SEXP ref, pDevDesc dd);
+SEXP cnvs_SetClipPath(SEXP path, SEXP ref, pDevDesc dd);
+void cnvs_ReleaseClipPath(SEXP ref, pDevDesc dd);
+SEXP cnvs_SetMask(SEXP mask, SEXP ref, pDevDesc dd);
+void cnvs_ReleaseMask(SEXP ref, pDevDesc dd);
+
 /* --- draw.c: device drawing callbacks --- */
 void cnvs_Line(double x1, double y1, double x2, double y2,
                const pGEcontext gc, pDevDesc dd);

@@ -70,3 +70,23 @@ test_that("cnvs() validates its arguments", {
   expect_error(cnvs(height = 0))
   expect_error(cnvs(pointsize = 0))
 })
+
+test_that("grid-based plots (e.g. ggplot2) don't crash the device", {
+  # Regression test: grid resolves/clears the current mask on every
+  # grid.newpage() by calling dd->setMask unconditionally, without a NULL
+  # check. Base graphics never exercises this path, so this needs its own
+  # coverage -- see the comments in src/device.c next to cnvs_SetMask()
+  # and cnvs_setup_callbacks() for the full story.
+  skip_if_not_installed("ggplot2")
+
+  f <- tempfile(fileext = ".html")
+  cnvs(f, width = 400, height = 300)
+  p <- ggplot2::ggplot(ggplot2::mpg, ggplot2::aes(displ, hwy)) +
+    ggplot2::geom_point()
+  print(p)
+  dev.off()
+
+  expect_true(file.exists(f))
+  txt <- paste(readLines(f), collapse = "\n")
+  expect_true(grepl("ctx.arc\\(", txt))
+})

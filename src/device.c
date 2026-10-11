@@ -108,6 +108,55 @@ void cnvs_Size(double *left, double *right, double *bottom, double *top, pDevDes
 }
 
 /* ---------------------------------------------------------------------
+ * Stubs for the "definitions" callback group (patterns, clipping paths,
+ * masks; added in R_GE_version 13 -- see R_ext/GraphicsEngine.h's version
+ * history comment).
+ *
+ * Unlike path/raster/cap/locator (which the header explicitly documents
+ * as "can be left unimplemented as NULL"), these ones are not optional in
+ * practice: grid resolves/clears the current mask on every
+ * grid.newpage() and viewport push by calling straight through
+ * dd->setMask, with no NULL check first. Any device whose compiled
+ * struct has this field at all (i.e. built against R >= 4.1 headers, like
+ * ours) needs a real function pointer here, even if all it does is
+ * "nothing, successfully" -- this is the same "template for no support"
+ * approach R core documents for updating existing devices to a new
+ * R_GE_version without adding real feature support. We don't support
+ * gradients/patterns/clipping-paths/masks, so every stub just declines
+ * (returns NULL / does nothing) and our drawing callbacks never see a
+ * pattern fill or a clip path, only ordinary colours and rectangular
+ * clips.
+ * --------------------------------------------------------------------- */
+
+SEXP cnvs_SetPattern(SEXP pattern, pDevDesc dd)
+{
+    return R_NilValue; /* "I don't support patterns" */
+}
+
+void cnvs_ReleasePattern(SEXP ref, pDevDesc dd)
+{
+    /* nothing to release, since we never created one */
+}
+
+SEXP cnvs_SetClipPath(SEXP path, SEXP ref, pDevDesc dd)
+{
+    return R_NilValue; /* "I don't support non-rectangular clip paths" */
+}
+
+void cnvs_ReleaseClipPath(SEXP ref, pDevDesc dd)
+{
+}
+
+SEXP cnvs_SetMask(SEXP mask, SEXP ref, pDevDesc dd)
+{
+    return R_NilValue; /* "I don't support masks" */
+}
+
+void cnvs_ReleaseMask(SEXP ref, pDevDesc dd)
+{
+}
+
+/* ---------------------------------------------------------------------
  * Wiring up the callback table
  * --------------------------------------------------------------------- */
 
@@ -152,6 +201,17 @@ static void cnvs_setup_callbacks(pDevDesc dd)
     dd->newFrameConfirm = NULL;
     dd->eventHelper     = NULL;
     dd->holdflush       = NULL;
+
+    /* These, by contrast, are NOT safe to leave NULL -- see the long
+     * comment above cnvs_SetPattern() et al. They're genuine "declines"
+     * (we don't support any of this), just expressed as real function
+     * calls rather than a missing pointer. */
+    dd->setPattern      = cnvs_SetPattern;
+    dd->releasePattern  = cnvs_ReleasePattern;
+    dd->setClipPath     = cnvs_SetClipPath;
+    dd->releaseClipPath = cnvs_ReleaseClipPath;
+    dd->setMask         = cnvs_SetMask;
+    dd->releaseMask     = cnvs_ReleaseMask;
 }
 
 /* ---------------------------------------------------------------------
@@ -239,7 +299,23 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
     dd->displayListOn = FALSE;
 
     dd->deviceSpecific = ctx;
-    dd->deviceVersion = R_GE_version;
+
+    /* `deviceVersion` tells the graphics engine which bundle of features
+     * (see the version history at the top of R_ext/GraphicsEngine.h) this
+     * device's callback table actually has slots for. It needs to match
+     * what we've genuinely wired up in cnvs_setup_callbacks() just above:
+     * we provide (trivial, declining) implementations of the "R_GE_definitions"
+     * (13) group -- setPattern/setClipPath/setMask and their release
+     * counterparts -- because grid calls those unconditionally (e.g. on
+     * every grid.newpage(), to clear any mask) regardless of
+     * deviceVersion, so leaving them NULL crashes R the moment grid
+     * graphics (ggplot2, lattice -- base graphics never triggers this) is
+     * used, even though plain plot() calls look fine. We stop at 13,
+     * though, because we do NOT implement the group/path/glyph/variable
+     * font callbacks that versions 15-17 require; claiming one of those
+     * higher versions without implementing them would reintroduce exactly
+     * this kind of crash for whatever grid feature touches groups. */
+    dd->deviceVersion = R_GE_definitions;
     dd->deviceClip = FALSE; /* let the engine do its own clipping math too */
 
     cnvs_setup_callbacks(dd);
