@@ -11,3 +11,4 @@ src/*.rds
 src/Makedeps
 tmp
 docs
+.posit/assistant/plans
