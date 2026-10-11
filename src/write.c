@@ -17,6 +17,12 @@
 
 void cnvs_write_header(cnvs_context *ctx)
 {
+    /* In non-standalone ("fragment") mode the output is meant to be
+     * spliced into a document that already has its own <html>/<head>/
+     * <body>, so we skip writing another one here -- see the comment on
+     * cnvs_context.standalone in cnvs.h. */
+    if (!ctx->standalone) return;
+
     fprintf(ctx->fp,
         "<!DOCTYPE html>\n"
         "<html>\n"
@@ -29,6 +35,8 @@ void cnvs_write_header(cnvs_context *ctx)
 
 void cnvs_write_footer(cnvs_context *ctx)
 {
+    if (!ctx->standalone) return;
+
     fprintf(ctx->fp, "</body>\n</html>\n");
 }
 
@@ -36,13 +44,14 @@ void cnvs_start_page(cnvs_context *ctx, const pGEcontext gc)
 {
     ctx->page_count++;
     fprintf(ctx->fp,
-        "<canvas id=\"cnvs-page-%d\" width=\"%d\" height=\"%d\" "
+        "<canvas id=\"%s-%d\" width=\"%d\" height=\"%d\" "
         "style=\"border: 1px solid #ccc; margin-bottom: 1em;\"></canvas>\n"
         "<script>\n"
         "(function() {\n"
-        "  var canvas = document.getElementById(\"cnvs-page-%d\");\n"
+        "  var canvas = document.getElementById(\"%s-%d\");\n"
         "  var ctx = canvas.getContext(\"2d\");\n",
-        ctx->page_count, ctx->width, ctx->height, ctx->page_count);
+        ctx->id_prefix, ctx->page_count, ctx->width, ctx->height,
+        ctx->id_prefix, ctx->page_count);
 
     /* The graphics engine always calls newPage with the background colour
      * to use for the page (see the `gc` parameter in the `newPage` entry

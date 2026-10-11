@@ -16,6 +16,20 @@
 #'   following the same convention as [grDevices::pdf()] and friends.
 #' @param bg Default background colour, as a colour name or other value
 #'   accepted by [grDevices::col2rgb()].
+#' @param standalone If `TRUE` (the default), `file` is written as a
+#'   complete, self-contained HTML document -- `<html>`/`<head>`/`<body>`
+#'   and all -- that can be opened directly in a browser. If `FALSE`, only
+#'   the `<canvas>`/`<script>` block for each page is written, with no
+#'   surrounding document; this is meant for embedding the output as a
+#'   fragment inside a larger HTML page you already have (for instance, a
+#'   knitted Quarto or R Markdown document), not for opening on its own.
+#' @param id_prefix Base string used to build each page's `<canvas>` element
+#'   `id` (page *n* gets `id = paste0(id_prefix, "-", n)`). The default,
+#'   `"cnvs-page"`, is fine for a single device writing its own file. Supply
+#'   a distinct value per device when embedding more than one `cnvs()`
+#'   fragment (`standalone = FALSE`) into the same host HTML document --
+#'   e.g. one call per code chunk in a Quarto/R Markdown document -- so
+#'   their `<canvas>` ids don't collide.
 #'
 #' @return Invisibly, `NULL`. Called for the side effect of opening a new
 #'   graphics device.
@@ -32,12 +46,17 @@ cnvs <- function(file = "cnvs.html",
                  width = 480, 
                  height = 480,
                  pointsize = 12, 
-                 bg = "white") {
+                 bg = "white",
+                 standalone = TRUE,
+                 id_prefix = "cnvs-page") {
   stopifnot(
     is.character(file), length(file) == 1, !is.na(file),
     is.numeric(width), length(width) == 1, width > 0,
     is.numeric(height), length(height) == 1, height > 0,
-    is.numeric(pointsize), length(pointsize) == 1, pointsize > 0
+    is.numeric(pointsize), length(pointsize) == 1, pointsize > 0,
+    is.logical(standalone), length(standalone) == 1, !is.na(standalone),
+    is.character(id_prefix), length(id_prefix) == 1, !is.na(id_prefix),
+    nzchar(id_prefix)
   )
 
   # The real work happens in C, in src/device.c: this call builds the
@@ -51,6 +70,8 @@ cnvs <- function(file = "cnvs.html",
     as.integer(width),
     as.integer(height),
     as.double(pointsize),
-    bg
+    bg,
+    standalone,
+    id_prefix
   ))
 }

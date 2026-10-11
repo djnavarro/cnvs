@@ -15,10 +15,11 @@
 #include <R_ext/Rdynload.h>
 
 /* declared in device.c */
-SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP bg_);
+SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP bg_,
+                   SEXP standalone_, SEXP id_prefix_);
 
 static const R_CallMethodDef CallEntries[] = {
-    {"cnvs_device_", (DL_FUNC) &cnvs_device_, 5},
+    {"cnvs_device_", (DL_FUNC) &cnvs_device_, 7},
     {NULL, NULL, 0}
 };
 

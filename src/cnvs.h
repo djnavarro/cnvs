@@ -43,6 +43,25 @@ typedef struct {
     int page_count;        /* how many <canvas> pages we've started so far */
     Rboolean clip_active;  /* TRUE if we've done ctx.save()+ctx.clip() since
                             * the last matching ctx.restore() */
+    Rboolean standalone;   /* TRUE (the default): write a complete, openable
+                            * HTML document (<html>/<head>/<body> and all).
+                            * FALSE: write only the <canvas>/<script> blocks
+                            * for each page, with no surrounding document --
+                            * meant to be read back and embedded as a
+                            * fragment inside someone else's HTML (e.g. a
+                            * knitted Quarto/R Markdown document), not
+                            * opened directly in a browser. */
+    char *id_prefix;       /* base string for each page's <canvas> id, e.g.
+                            * "cnvs-page" produces ids "cnvs-page-1",
+                            * "cnvs-page-2", ... Caller-supplied (rather than
+                            * a fixed string) so that several cnvs devices
+                            * writing fragments (standalone = FALSE) into
+                            * the same host document -- e.g. several chunks
+                            * of one Quarto/R Markdown file -- can be given
+                            * distinct prefixes and never collide on
+                            * `id="..."` in the final HTML. Owned by this
+                            * struct: allocated in cnvs_device_(), freed in
+                            * cnvs_Close(). */
 } cnvs_context;
 
 /* Convenience accessor: fetch our struct back out of a pDevDesc. */

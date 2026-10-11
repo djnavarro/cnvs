@@ -9,7 +9,9 @@ cnvs(
   width = 480,
   height = 480,
   pointsize = 12,
-  bg = "white"
+  bg = "white",
+  standalone = TRUE,
+  id_prefix = "cnvs-page"
 )
 }
 \arguments{
@@ -23,6 +25,22 @@ following the same convention as \code{\link[grDevices:pdf]{grDevices::pdf()}} a
 
 \item{bg}{Default background colour, as a colour name or other value
 accepted by \code{\link[grDevices:col2rgb]{grDevices::col2rgb()}}.}
+
+\item{standalone}{If \code{TRUE} (the default), \code{file} is written as a
+complete, self-contained HTML document -- \verb{<html>}/\verb{<head>}/\verb{<body>}
+and all -- that can be opened directly in a browser. If \code{FALSE}, only
+the \verb{<canvas>}/\verb{<script>} block for each page is written, with no
+surrounding document; this is meant for embedding the output as a
+fragment inside a larger HTML page you already have (for instance, a
+knitted Quarto or R Markdown document), not for opening on its own.}
+
+\item{id_prefix}{Base string used to build each page's \verb{<canvas>} element
+\code{id} (page \emph{n} gets \code{id = paste0(id_prefix, "-", n)}). The default,
+\code{"cnvs-page"}, is fine for a single device writing its own file. Supply
+a distinct value per device when embedding more than one \code{cnvs()}
+fragment (\code{standalone = FALSE}) into the same host HTML document --
+e.g. one call per code chunk in a Quarto/R Markdown document -- so
+their \verb{<canvas>} ids don't collide.}
 }
 \value{
 Invisibly, \code{NULL}. Called for the side effect of opening a new

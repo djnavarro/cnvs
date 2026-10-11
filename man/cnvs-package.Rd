@@ -36,12 +36,21 @@ and font descriptions into CSS/JS.
 
 See \code{\link[=cnvs]{cnvs()}} to open a device.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/djnavarro/cnvs}
+  \item \url{https://cnvs.djnavarro.net/}
+  \item Report bugs at \url{https://github.com/djnavarro/cnvs/issues}
+}
+
+}
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com}
+\strong{Maintainer}: Danielle Navarro \email{djnavarro@protonmail.com} (\href{https://orcid.org/0000-0001-7648-6578}{ORCID})
 
 Authors:
 \itemize{
-  \item First Last \email{first.last@example.com}
+  \item Danielle Navarro \email{djnavarro@protonmail.com} (\href{https://orcid.org/0000-0001-7648-6578}{ORCID})
 }
 
 }

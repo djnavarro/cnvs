@@ -22,6 +22,7 @@
  */
 #include "cnvs.h"
 #include <stdlib.h>
+#include <string.h>
 
 /* A handful of constants describing character-size bookkeeping that the
  * graphics engine needs from every device (used e.g. when laying out
@@ -90,6 +91,7 @@ void cnvs_Close(pDevDesc dd)
     }
     cnvs_write_footer(ctx);
     fclose(ctx->fp);
+    free(ctx->id_prefix);
     free(ctx);
     /* `dd` itself (the DevDesc struct) is freed by the graphics engine
      * right after this callback returns -- we only own `ctx`. */
@@ -218,13 +220,16 @@ static void cnvs_setup_callbacks(pDevDesc dd)
  * cnvs_device_(): the entry point called from R via .Call()
  * --------------------------------------------------------------------- */
 
-SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP bg_)
+SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP bg_,
+                   SEXP standalone_, SEXP id_prefix_)
 {
     const char *file = CHAR(STRING_ELT(file_, 0));
     int width = asInteger(width_);
     int height = asInteger(height_);
     double pointsize = asReal(pointsize_);
     int bg = RGBpar3(bg_, 0, R_RGB(255, 255, 255));
+    Rboolean standalone = (Rboolean) asLogical(standalone_);
+    const char *id_prefix = CHAR(STRING_ELT(id_prefix_, 0));
 
     /* Every device does these two checks before creating itself: confirm
      * we were compiled against headers compatible with the running R's
@@ -252,6 +257,17 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
     ctx->height = height;
     ctx->page_count = 0;
     ctx->clip_active = FALSE;
+    ctx->standalone = standalone;
+    /* Copied (rather than pointing straight at R's string storage) because
+     * ctx outlives this call -- R could garbage-collect id_prefix_ long
+     * before cnvs_Close() runs. Freed again in cnvs_Close(). */
+    ctx->id_prefix = strdup(id_prefix);
+    if (ctx->id_prefix == NULL) {
+        fclose(ctx->fp);
+        free(ctx);
+        free(dd);
+        error("cnvs: could not allocate id_prefix");
+    }
 
     /* ---- Physical device description ----
      * We model the canvas the same way a screen/bitmap device would:
