@@ -1,10 +1,12 @@
-/* colour.c -- translating R's graphics parameters into CSS/JS
+/* style.c -- translating R's graphics parameters into CSS/JS
  *
  * R passes every drawing callback a `pGEcontext gc` -- a bundle of
  * "current graphical parameters" (colour, line width, line type, font...)
  * that the device is expected to read and honour (see the R_GE_gcontext
  * struct in R_ext/GraphicsEngine.h). This file is where we translate those
- * values into the matching bits of CSS/canvas JS.
+ * values -- colour, stroke style, and font -- into the matching bits of
+ * CSS/canvas JS. (Named for the broader scope -- colour is only one of the
+ * three things handled here -- rather than after any single function.)
  */
 #include "cnvs.h"
 #include <string.h>

@@ -77,7 +77,7 @@ responsibility:
   pages. Start here.
 - `src/draw.c` – the drawing callbacks: lines, rectangles, circles,
   polygons, text, clipping.
-- `src/colour.c` – translating R’s packed colour integers, line styles,
+- `src/style.c` – translating R’s packed colour integers, line styles,
   and font descriptions into the equivalent CSS/JS.
 - `src/write.c` – the HTML/JS text templates everything else writes
   into.

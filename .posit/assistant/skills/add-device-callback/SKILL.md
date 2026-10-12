@@ -69,7 +69,7 @@ must also:
   - A callback about the device's lifecycle, capabilities, or declining
     a feature belongs in `src/device.c`.
   - A new piece of colour/line-style/font translation logic belongs in
-    `src/colour.c`.
+    `src/style.c`.
   - A new piece of HTML/JS boilerplate (e.g. a new kind of `<script>`
     block) belongs in `src/write.c`.
 - **Wiring**: register the function pointer in `cnvs_setup_callbacks()`
@@ -87,7 +87,7 @@ R-graphics-engine background can follow. At minimum, cover:
   surprise a reader (device vs. user coordinates, degrees vs. radians).
 - *Why* the implementation does what it does, wherever that's not
   obvious from the code alone -- matching the standard already set in
-  `draw.c`'s `cnvs_Clip()` and `colour.c`'s `cnvs_set_line_style()`.
+  `draw.c`'s `cnvs_Clip()` and `style.c`'s `cnvs_set_line_style()`.
 - Any approximation or limitation, stated plainly (see
   `cnvs_StrWidth()` for the tone to match), rather than silently
   returning a plausible-looking but inexact value.

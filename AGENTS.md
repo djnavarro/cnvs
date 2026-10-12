@@ -40,7 +40,7 @@ src/
                      # start here to understand how a device plugs into R
   draw.c            # drawing callbacks: line, rect, circle, polyline,
                      # polygon, text, clip, strWidth, metricInfo
-  colour.c          # R colour ints / line styles / fonts -> CSS/JS text
+  style.c           # R colour ints / line styles / fonts -> CSS/JS text
   write.c           # the HTML/JS text templates everything else writes into
   init.c            # native routine registration (R_init_cnvs)
 
@@ -130,7 +130,7 @@ knows C and knows *what a line chart is*, but has never seen
   returning a number that looks authoritative.
 - New top-level functions get a short header comment explaining what
   triggers the call and what it's responsible for, matching the style
-  already in `draw.c`/`device.c`/`colour.c`/`write.c`.
+  already in `draw.c`/`device.c`/`style.c`/`write.c`.
 
 This bar applies to C and R code alike. It's fine -- expected, even --
 for comments here to be longer relative to the code than they would be

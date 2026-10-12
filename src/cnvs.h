@@ -9,7 +9,7 @@
  *
  * The source files are organised by what they are responsible for:
  *   - write.c   turns "start a page" / "end a page" into HTML/JS text
- *   - colour.c  turns R graphics-parameter values (colours, line styles,
+ *   - style.c   turns R graphics-parameter values (colours, line styles,
  *               fonts) into the equivalent CSS/JS text
  *   - device.c  the device *lifecycle*: creating it, closing it, resizing
  *               it, starting new pages
@@ -74,7 +74,7 @@ void cnvs_start_page(cnvs_context *ctx, const pGEcontext gc);
 void cnvs_end_page(cnvs_context *ctx);
 char *cnvs_js_escape(const char *in);
 
-/* --- colour.c: translating R graphics-parameter values into CSS/JS --- */
+/* --- style.c: translating R graphics-parameter values into CSS/JS --- */
 void cnvs_colour_to_css(int col, char *buf, size_t buf_size);
 void cnvs_set_line_style(FILE *fp, const pGEcontext gc);
 void cnvs_set_font(FILE *fp, const pGEcontext gc);

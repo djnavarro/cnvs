@@ -29,7 +29,7 @@ new pages. This is the best starting point for understanding how a
 device registers itself with R.
 \item \code{draw.c} -- the drawing callbacks: lines, rectangles, circles,
 polygons, text, clipping.
-\item \code{colour.c} -- translating R's packed colour integers, line styles,
+\item \code{style.c} -- translating R's packed colour integers, line styles,
 and font descriptions into CSS/JS.
 \item \code{write.c} -- the HTML/JS text templates everything else writes into.
 }
