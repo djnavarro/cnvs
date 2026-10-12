@@ -297,6 +297,14 @@ static void cnvs_setup_description(pDevDesc dd, int width, int height, double po
     dd->gamma = 1;
 
     dd->canClip = TRUE;        /* we implement the clip() callback */
+    /* deviceClip overrides canClip, telling the engine to leave ALL
+     * clipping to us rather than also doing its own clipping math on top
+     * of ours (see the deviceClip field's comment in
+     * R_ext/GraphicsDevice.h). We don't need that -- our clip() callback
+     * only ever has to intersect one rectangle, which canvas's own
+     * ctx.clip() already does for us -- so we leave the engine's
+     * clipping on as a second line of defence instead of overriding it. */
+    dd->deviceClip = FALSE;
     dd->canChangeGamma = FALSE;
     dd->canHAdj = 1;           /* we honour hadj at the 3 standard values: 0, 0.5, 1 */
 
@@ -370,7 +378,6 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
      * higher versions without implementing them would reintroduce exactly
      * this kind of crash for whatever grid feature touches groups. */
     dd->deviceVersion = R_GE_definitions;
-    dd->deviceClip = FALSE; /* let the engine do its own clipping math too */
 
     cnvs_setup_callbacks(dd);
 
