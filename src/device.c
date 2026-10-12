@@ -164,6 +164,7 @@ void cnvs_ReleaseMask(SEXP ref, pDevDesc dd)
 
 static void cnvs_setup_callbacks(pDevDesc dd)
 {
+    /* Callback functions defined in device.c*/
     dd->activate   = cnvs_Activate;
     dd->deactivate = cnvs_Deactivate;
     dd->close      = cnvs_Close;
@@ -171,6 +172,7 @@ static void cnvs_setup_callbacks(pDevDesc dd)
     dd->size       = cnvs_Size;
     dd->mode       = cnvs_Mode;
 
+    /* Callback functions defined in draw.c*/
     dd->line       = cnvs_Line;
     dd->rect       = cnvs_Rect;
     dd->circle     = cnvs_Circle;
@@ -207,7 +209,7 @@ static void cnvs_setup_callbacks(pDevDesc dd)
     /* These, by contrast, are NOT safe to leave NULL -- see the long
      * comment above cnvs_SetPattern() et al. They're genuine "declines"
      * (we don't support any of this), just expressed as real function
-     * calls rather than a missing pointer. */
+     * calls rather than a missing pointer. Also in device.c */
     dd->setPattern      = cnvs_SetPattern;
     dd->releasePattern  = cnvs_ReleasePattern;
     dd->setClipPath     = cnvs_SetClipPath;
