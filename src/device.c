@@ -331,8 +331,8 @@ static void cnvs_setup_description(pDevDesc dd, int width, int height, double po
  * cnvs_device_(): the entry point called from R via .Call()
  * --------------------------------------------------------------------- */
 
-SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP bg_,
-                   SEXP standalone_, SEXP id_prefix_)
+SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, 
+                  SEXP bg_, SEXP standalone_, SEXP id_prefix_)
 {
     const char *file = CHAR(STRING_ELT(file_, 0));
     int width = asInteger(width_);
@@ -353,7 +353,8 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
      * open file handle, and bookkeeping like page count and clip state)
      * that every drawing callback needs in order to write the HTML/JS
      * output. */
-    cnvs_context *ctx = cnvs_setup_context(file, width, height, standalone, id_prefix);
+    cnvs_context *ctx = cnvs_setup_context(file, width, height, 
+                                           standalone, id_prefix);
 
     /* Allocate the device description struct, dd -- calloc() only
      * allocates and zeroes it; the real initialisation happens just below,
