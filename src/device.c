@@ -217,40 +217,30 @@ static void cnvs_setup_callbacks(pDevDesc dd)
 }
 
 /* ---------------------------------------------------------------------
- * cnvs_device_(): the entry point called from R via .Call()
+ * cnvs_setup_context(): allocate and fill in our own private state
  * --------------------------------------------------------------------- */
 
-SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP bg_,
-                   SEXP standalone_, SEXP id_prefix_)
+/* Allocates a cnvs_context, opens its output file, and fills in every
+ * field from the arguments cnvs() was called with. This is everything
+ * cnvs_device_() needs to set up on *our* side, before it ever touches
+ * the graphics engine's own DevDesc struct (that's cnvs_setup_description()
+ * instead, just below).
+ *
+ * On any failure, frees what it already allocated and calls R's error()
+ * -- which performs a longjmp back out of this whole .Call(), so none of
+ * the error branches below ever return to their caller. Since nothing
+ * referring to `dd` happens until after this succeeds, there's no `dd`
+ * to also clean up here; cnvs_device_() only needs to allocate `dd` once
+ * it knows ctx is ready. */
+static cnvs_context *cnvs_setup_context(const char *file, int width, int height,
+                                         Rboolean standalone, const char *id_prefix)
 {
-    const char *file = CHAR(STRING_ELT(file_, 0));
-    int width = asInteger(width_);
-    int height = asInteger(height_);
-    double pointsize = asReal(pointsize_);
-    int bg = RGBpar3(bg_, 0, R_RGB(255, 255, 255));
-    Rboolean standalone = (Rboolean) asLogical(standalone_);
-    const char *id_prefix = CHAR(STRING_ELT(id_prefix_, 0));
-
-    /* Every device does these two checks before creating itself: confirm
-     * we were compiled against headers compatible with the running R's
-     * graphics engine, and confirm the engine is willing to let us open
-     * another device right now. */
-    R_GE_checkVersionOrDie(R_GE_version);
-    R_CheckDeviceAvailable();
-
-    pDevDesc dd = (pDevDesc) calloc(1, sizeof(DevDesc));
-    if (dd == NULL) error("cnvs: could not allocate device description");
-
     cnvs_context *ctx = (cnvs_context *) calloc(1, sizeof(cnvs_context));
-    if (ctx == NULL) {
-        free(dd);
-        error("cnvs: could not allocate device context");
-    }
+    if (ctx == NULL) error("cnvs: could not allocate device context");
 
     ctx->fp = fopen(file, "w");
     if (ctx->fp == NULL) {
         free(ctx);
-        free(dd);
         error("cnvs: could not open '%s' for writing", file);
     }
     ctx->width = width;
@@ -265,12 +255,26 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
     if (ctx->id_prefix == NULL) {
         fclose(ctx->fp);
         free(ctx);
-        free(dd);
         error("cnvs: could not allocate id_prefix");
     }
 
-    /* ---- Physical device description ----
-     * We model the canvas the same way a screen/bitmap device would:
+    return ctx;
+}
+
+/* ---------------------------------------------------------------------
+ * cnvs_setup_description(): the graphics engine's own device description
+ * --------------------------------------------------------------------- */
+
+/* Fills in the parts of DevDesc that describe the device's physical
+ * characteristics and capabilities to the graphics engine -- size,
+ * character-metric bookkeeping, starting graphical parameters, and which
+ * optional features (transparency, raster, locator, ...) it supports.
+ * This is everything the engine needs to know about the device *before*
+ * it starts calling drawing callbacks; wiring up those callbacks
+ * themselves is cnvs_setup_callbacks()'s job instead. */
+static void cnvs_setup_description(pDevDesc dd, int width, int height, double pointsize)
+{
+    /* We model the canvas the same way a screen/bitmap device would:
      * origin at the top-left, y increasing downward, one device unit
      * equal to one CSS pixel. That means the coordinates the engine
      * passes into our drawing callbacks are already exactly the numbers
@@ -298,7 +302,9 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
 
     dd->startps = pointsize;
     dd->startcol = R_RGB(0, 0, 0);
-    dd->startfill = bg;
+    /* dd->startfill is deliberately not set here -- it comes from the `bg`
+     * argument to cnvs(), which this helper doesn't take, so the caller
+     * sets it immediately after calling cnvs_setup_description(). */
     dd->startlty = LTY_SOLID;
     dd->startfont = 1;
     dd->startgamma = 1;
@@ -313,13 +319,48 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
      * pdf()/svglite()) doesn't need R to keep a display list around for
      * replaying/resizing, so we turn it off. */
     dd->displayListOn = FALSE;
+}
 
+/* ---------------------------------------------------------------------
+ * cnvs_device_(): the entry point called from R via .Call()
+ * --------------------------------------------------------------------- */
+
+SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP bg_,
+                   SEXP standalone_, SEXP id_prefix_)
+{
+    const char *file = CHAR(STRING_ELT(file_, 0));
+    int width = asInteger(width_);
+    int height = asInteger(height_);
+    double pointsize = asReal(pointsize_);
+    int bg = RGBpar3(bg_, 0, R_RGB(255, 255, 255));
+    Rboolean standalone = (Rboolean) asLogical(standalone_);
+    const char *id_prefix = CHAR(STRING_ELT(id_prefix_, 0));
+
+    /* Every device does these two checks before creating itself: confirm
+     * we were compiled against headers compatible with the running R's
+     * graphics engine, and confirm the engine is willing to let us open
+     * another device right now. */
+    R_GE_checkVersionOrDie(R_GE_version);
+    R_CheckDeviceAvailable();
+
+    cnvs_context *ctx = cnvs_setup_context(file, width, height, standalone, id_prefix);
+
+    pDevDesc dd = (pDevDesc) calloc(1, sizeof(DevDesc));
+    if (dd == NULL) {
+        fclose(ctx->fp);
+        free(ctx->id_prefix);
+        free(ctx);
+        error("cnvs: could not allocate device description");
+    }
+
+    cnvs_setup_description(dd, width, height, pointsize);
+    dd->startfill = bg;
     dd->deviceSpecific = ctx;
 
     /* `deviceVersion` tells the graphics engine which bundle of features
      * (see the version history at the top of R_ext/GraphicsEngine.h) this
      * device's callback table actually has slots for. It needs to match
-     * what we've genuinely wired up in cnvs_setup_callbacks() just above:
+     * what we've genuinely wired up in cnvs_setup_callbacks() just below:
      * we provide (trivial, declining) implementations of the "R_GE_definitions"
      * (13) group -- setPattern/setClipPath/setMask and their release
      * counterparts -- because grid calls those unconditionally (e.g. on
