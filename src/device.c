@@ -400,6 +400,23 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
      * set up in this helper function. */
     cnvs_setup_callbacks(dd);
 
+    /* Everything above has just been building our own `dd` in memory --
+     * the graphics engine doesn't know it exists yet. These three calls
+     * are what actually hand it over and make it "the current device":
+     *   - GEcreateDevDesc() wraps our `dd` in the engine's own pGEDevDesc
+     *     struct, which adds the engine-level bookkeeping (e.g. the
+     *     display list below) that sits on top of a device's own
+     *     description. From here on, it's this wrapped `gdd`, not the
+     *     raw `dd`, that the rest of the engine operates on.
+     *   - GEaddDevice2() registers that wrapped device in R's device list
+     *     (what dev.list()/dev.cur() report) under the name "cnvs", and
+     *     makes it the new current device, so that plotting calls after
+     *     this point in R are routed to our callbacks.
+     *   - GEinitDisplayList() sets up the (empty) display-list bookkeeping
+     *     the engine keeps per device. We've told it we don't want pages
+     *     replayed/resized via dd->displayListOn = FALSE above, but every
+     *     device -- ours included -- is still expected to have this
+     *     called once up front, the same as pdf()/svg() and friends do. */
     pGEDevDesc gdd = GEcreateDevDesc(dd);
     GEaddDevice2(gdd, "cnvs");
     GEinitDisplayList(gdd);
