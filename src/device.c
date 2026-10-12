@@ -272,7 +272,7 @@ static cnvs_context *cnvs_setup_context(const char *file, int width, int height,
  * This is everything the engine needs to know about the device *before*
  * it starts calling drawing callbacks; wiring up those callbacks
  * themselves is cnvs_setup_callbacks()'s job instead. */
-static void cnvs_setup_description(pDevDesc dd, int width, int height, double pointsize)
+static void cnvs_setup_description(pDevDesc dd, int width, int height, double pointsize, int bg)
 {
     /* We model the canvas the same way a screen/bitmap device would:
      * origin at the top-left, y increasing downward, one device unit
@@ -302,9 +302,7 @@ static void cnvs_setup_description(pDevDesc dd, int width, int height, double po
 
     dd->startps = pointsize;
     dd->startcol = R_RGB(0, 0, 0);
-    /* dd->startfill is deliberately not set here -- it comes from the `bg`
-     * argument to cnvs(), which this helper doesn't take, so the caller
-     * sets it immediately after calling cnvs_setup_description(). */
+    dd->startfill = bg;
     dd->startlty = LTY_SOLID;
     dd->startfont = 1;
     dd->startgamma = 1;
@@ -353,8 +351,7 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
         error("cnvs: could not allocate device description");
     }
 
-    cnvs_setup_description(dd, width, height, pointsize);
-    dd->startfill = bg;
+    cnvs_setup_description(dd, width, height, pointsize, bg);
     dd->deviceSpecific = ctx;
 
     /* `deviceVersion` tells the graphics engine which bundle of features
