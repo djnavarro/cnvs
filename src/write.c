@@ -15,15 +15,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-void cnvs_write_header(cnvs_context *ctx)
+void cnvs_write_header(cnvs_state *state)
 {
     /* In non-standalone ("fragment") mode the output is meant to be
      * spliced into a document that already has its own <html>/<head>/
      * <body>, so we skip writing another one here -- see the comment on
-     * cnvs_context.standalone in cnvs.h. */
-    if (!ctx->standalone) return;
+     * cnvs_state.standalone in cnvs.h. */
+    if (!state->standalone) return;
 
-    fprintf(ctx->fp,
+    fprintf(state->fp,
         "<!DOCTYPE html>\n"
         "<html>\n"
         "<head>\n"
@@ -33,25 +33,25 @@ void cnvs_write_header(cnvs_context *ctx)
         "<body>\n");
 }
 
-void cnvs_write_footer(cnvs_context *ctx)
+void cnvs_write_footer(cnvs_state *state)
 {
-    if (!ctx->standalone) return;
+    if (!state->standalone) return;
 
-    fprintf(ctx->fp, "</body>\n</html>\n");
+    fprintf(state->fp, "</body>\n</html>\n");
 }
 
-void cnvs_start_page(cnvs_context *ctx, const pGEcontext gc)
+void cnvs_start_page(cnvs_state *state, const pGEcontext gc)
 {
-    ctx->page_count++;
-    fprintf(ctx->fp,
+    state->page_count++;
+    fprintf(state->fp,
         "<canvas id=\"%s-%d\" width=\"%d\" height=\"%d\" "
         "style=\"border: 1px solid #ccc; margin-bottom: 1em;\"></canvas>\n"
         "<script>\n"
         "(function() {\n"
         "  var canvas = document.getElementById(\"%s-%d\");\n"
         "  var ctx = canvas.getContext(\"2d\");\n",
-        ctx->id_prefix, ctx->page_count, ctx->width, ctx->height,
-        ctx->id_prefix, ctx->page_count);
+        state->id_prefix, state->page_count, state->width, state->height,
+        state->id_prefix, state->page_count);
 
     /* The graphics engine always calls newPage with the background colour
      * to use for the page (see the `gc` parameter in the `newPage` entry
@@ -60,14 +60,14 @@ void cnvs_start_page(cnvs_context *ctx, const pGEcontext gc)
     if (gc != NULL && !R_TRANSPARENT(gc->fill)) {
         char css[32];
         cnvs_colour_to_css(gc->fill, css, sizeof(css));
-        fprintf(ctx->fp, "  ctx.fillStyle = \"%s\";\n", css);
-        fprintf(ctx->fp, "  ctx.fillRect(0, 0, %d, %d);\n", ctx->width, ctx->height);
+        fprintf(state->fp, "  ctx.fillStyle = \"%s\";\n", css);
+        fprintf(state->fp, "  ctx.fillRect(0, 0, %d, %d);\n", state->width, state->height);
     }
 }
 
-void cnvs_end_page(cnvs_context *ctx)
+void cnvs_end_page(cnvs_state *state)
 {
-    fprintf(ctx->fp, "})();\n</script>\n");
+    fprintf(state->fp, "})();\n</script>\n");
 }
 
 /* Escape a string for safe inclusion inside a JS double-quoted string

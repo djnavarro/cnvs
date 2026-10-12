@@ -71,7 +71,7 @@ the documentation.
   measurement, because there is no portable way to get real font metrics
   without an actual rendering engine.
 - Only one rectangular clip region is tracked at a time (`clip_active` in
-  `cnvs_context`); a new `clip()` call always restores any previous clip
+  `cnvs_state`); a new `clip()` call always restores any previous clip
   before applying the next one.
 
 ## A load-bearing lesson: `deviceVersion` and the "definitions" callbacks

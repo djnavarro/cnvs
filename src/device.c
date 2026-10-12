@@ -62,39 +62,39 @@ void cnvs_Mode(int mode, pDevDesc dd)
 
 void cnvs_NewPage(const pGEcontext gc, pDevDesc dd)
 {
-    cnvs_context *ctx = CNVS(dd);
+    cnvs_state *state = CNVS(dd);
 
     /* newPage is called once before the very first thing is drawn, and
      * again every time plotting starts a fresh page (e.g. a second
      * plot() call, or the next panel in par(mfrow = ...)). Each page gets
      * its own <canvas>/<script> block, so if a previous page is open we
      * need to close it out first. */
-    if (ctx->page_count > 0) {
-        if (ctx->clip_active) {
-            fprintf(ctx->fp, "  ctx.restore();\n");
-            ctx->clip_active = FALSE;
+    if (state->page_count > 0) {
+        if (state->clip_active) {
+            fprintf(state->fp, "  ctx.restore();\n");
+            state->clip_active = FALSE;
         }
-        cnvs_end_page(ctx);
+        cnvs_end_page(state);
     }
-    cnvs_start_page(ctx, gc);
+    cnvs_start_page(state, gc);
 }
 
 void cnvs_Close(pDevDesc dd)
 {
-    cnvs_context *ctx = CNVS(dd);
+    cnvs_state *state = CNVS(dd);
 
-    if (ctx->page_count > 0) {
-        if (ctx->clip_active) {
-            fprintf(ctx->fp, "  ctx.restore();\n");
+    if (state->page_count > 0) {
+        if (state->clip_active) {
+            fprintf(state->fp, "  ctx.restore();\n");
         }
-        cnvs_end_page(ctx);
+        cnvs_end_page(state);
     }
-    cnvs_write_footer(ctx);
-    fclose(ctx->fp);
-    free(ctx->id_prefix);
-    free(ctx);
+    cnvs_write_footer(state);
+    fclose(state->fp);
+    free(state->id_prefix);
+    free(state);
     /* `dd` itself (the DevDesc struct) is freed by the graphics engine
-     * right after this callback returns -- we only own `ctx`. */
+     * right after this callback returns -- we only own `state`. */
 }
 
 void cnvs_Size(double *left, double *right, double *bottom, double *top, pDevDesc dd)
@@ -102,11 +102,11 @@ void cnvs_Size(double *left, double *right, double *bottom, double *top, pDevDes
     /* Called if the engine ever needs to ask the device for its current
      * extent (we never resize ourselves, so this always returns the same
      * fixed values that were set up in cnvs_device_()). */
-    cnvs_context *ctx = CNVS(dd);
+    cnvs_state *state = CNVS(dd);
     *left = 0;
-    *right = ctx->width;
+    *right = state->width;
     *top = 0;
-    *bottom = ctx->height;
+    *bottom = state->height;
 }
 
 /* ---------------------------------------------------------------------
@@ -219,10 +219,10 @@ static void cnvs_setup_callbacks(pDevDesc dd)
 }
 
 /* ---------------------------------------------------------------------
- * cnvs_setup_context(): allocate and fill in our own private state
+ * cnvs_setup_state(): allocate and fill in our own private state
  * --------------------------------------------------------------------- */
 
-/* Allocates a cnvs_context, opens its output file, and fills in every
+/* Allocates a cnvs_state, opens its output file, and fills in every
  * field from the arguments cnvs() was called with. This is everything
  * cnvs_device_() needs to set up on *our* side, before it ever touches
  * the graphics engine's own DevDesc struct (that's cnvs_setup_description()
@@ -233,34 +233,34 @@ static void cnvs_setup_callbacks(pDevDesc dd)
  * the error branches below ever return to their caller. Since nothing
  * referring to `dd` happens until after this succeeds, there's no `dd`
  * to also clean up here; cnvs_device_() only needs to allocate `dd` once
- * it knows ctx is ready. */
-static cnvs_context *cnvs_setup_context(const char *file, int width, int height,
+ * it knows state is ready. */
+static cnvs_state *cnvs_setup_state(const char *file, int width, int height,
                                          Rboolean standalone, const char *id_prefix)
 {
-    cnvs_context *ctx = (cnvs_context *) calloc(1, sizeof(cnvs_context));
-    if (ctx == NULL) error("cnvs: could not allocate device context");
+    cnvs_state *state = (cnvs_state *) calloc(1, sizeof(cnvs_state));
+    if (state == NULL) error("cnvs: could not allocate device state");
 
-    ctx->fp = fopen(file, "w");
-    if (ctx->fp == NULL) {
-        free(ctx);
+    state->fp = fopen(file, "w");
+    if (state->fp == NULL) {
+        free(state);
         error("cnvs: could not open '%s' for writing", file);
     }
-    ctx->width = width;
-    ctx->height = height;
-    ctx->page_count = 0;
-    ctx->clip_active = FALSE;
-    ctx->standalone = standalone;
+    state->width = width;
+    state->height = height;
+    state->page_count = 0;
+    state->clip_active = FALSE;
+    state->standalone = standalone;
     /* Copied (rather than pointing straight at R's string storage) because
-     * ctx outlives this call -- R could garbage-collect id_prefix_ long
+     * state outlives this call -- R could garbage-collect id_prefix_ long
      * before cnvs_Close() runs. Freed again in cnvs_Close(). */
-    ctx->id_prefix = strdup(id_prefix);
-    if (ctx->id_prefix == NULL) {
-        fclose(ctx->fp);
-        free(ctx);
+    state->id_prefix = strdup(id_prefix);
+    if (state->id_prefix == NULL) {
+        fclose(state->fp);
+        free(state);
         error("cnvs: could not allocate id_prefix");
     }
 
-    return ctx;
+    return state;
 }
 
 /* ---------------------------------------------------------------------
@@ -358,7 +358,7 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_,
      * open file handle, and bookkeeping like page count and clip state)
      * that every drawing callback needs in order to write the HTML/JS
      * output. */
-    cnvs_context *ctx = cnvs_setup_context(file, width, height, 
+    cnvs_state *state = cnvs_setup_state(file, width, height, 
                                            standalone, id_prefix);
 
     /* Allocate the device description struct, dd -- calloc() only
@@ -366,9 +366,9 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_,
      * in cnvs_setup_description(). */
     pDevDesc dd = (pDevDesc) calloc(1, sizeof(DevDesc));
     if (dd == NULL) {
-        fclose(ctx->fp);
-        free(ctx->id_prefix);
-        free(ctx);
+        fclose(state->fp);
+        free(state->id_prefix);
+        free(state);
         error("cnvs: could not allocate device description");
     }
 
@@ -378,11 +378,11 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_,
     cnvs_setup_description(dd, width, height, pointsize, bg);
 
     /* `deviceSpecific` is the slot R's DevDesc struct dedicates to a
-     * device's own private data (see the comment on cnvs_context in
-     * cnvs.h). For cnvs, that's our own ctx -- the open file handle and
+     * device's own private data (see the comment on cnvs_state in
+     * cnvs.h). For cnvs, that's our own state -- the open file handle and
      * per-device state every drawing callback needs, accessed back out via
      * the CNVS(dd) macro. */
-    dd->deviceSpecific = ctx;
+    dd->deviceSpecific = state;
 
     /* `deviceVersion` tells the graphics engine which bundle of features
      * (see the version history at the top of R_ext/GraphicsEngine.h) this
@@ -430,7 +430,7 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_,
     /* The outer <html>/<body> scaffolding is written once, up front.
      * Individual pages (one <canvas>/<script> block each) are opened and
      * closed by the newPage/close callbacks as plotting proceeds. */
-    cnvs_write_header(ctx);
+    cnvs_write_header(state);
 
     return R_NilValue;
 }

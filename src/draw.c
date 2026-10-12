@@ -26,23 +26,23 @@
 void cnvs_Line(double x1, double y1, double x2, double y2,
                const pGEcontext gc, pDevDesc dd)
 {
-    cnvs_context *ctx = CNVS(dd);
+    cnvs_state *state = CNVS(dd);
     if (gc->col == NA_INTEGER || gc->lty == LTY_BLANK) return;
 
     char css[32];
     cnvs_colour_to_css(gc->col, css, sizeof(css));
-    cnvs_set_line_style(ctx->fp, gc);
-    fprintf(ctx->fp, "  ctx.strokeStyle = \"%s\";\n", css);
-    fprintf(ctx->fp, "  ctx.beginPath();\n");
-    fprintf(ctx->fp, "  ctx.moveTo(%.2f, %.2f);\n", x1, y1);
-    fprintf(ctx->fp, "  ctx.lineTo(%.2f, %.2f);\n", x2, y2);
-    fprintf(ctx->fp, "  ctx.stroke();\n");
+    cnvs_set_line_style(state->fp, gc);
+    fprintf(state->fp, "  ctx.strokeStyle = \"%s\";\n", css);
+    fprintf(state->fp, "  ctx.beginPath();\n");
+    fprintf(state->fp, "  ctx.moveTo(%.2f, %.2f);\n", x1, y1);
+    fprintf(state->fp, "  ctx.lineTo(%.2f, %.2f);\n", x2, y2);
+    fprintf(state->fp, "  ctx.stroke();\n");
 }
 
 void cnvs_Rect(double x0, double y0, double x1, double y1,
                const pGEcontext gc, pDevDesc dd)
 {
-    cnvs_context *ctx = CNVS(dd);
+    cnvs_state *state = CNVS(dd);
 
     /* (x0,y0) and (x1,y1) are opposite corners, but not guaranteed to
      * arrive as (top-left, bottom-right) -- normalise to canvas's
@@ -55,91 +55,91 @@ void cnvs_Rect(double x0, double y0, double x1, double y1,
     if (gc->fill != NA_INTEGER && !R_TRANSPARENT(gc->fill)) {
         char css[32];
         cnvs_colour_to_css(gc->fill, css, sizeof(css));
-        fprintf(ctx->fp, "  ctx.fillStyle = \"%s\";\n", css);
-        fprintf(ctx->fp, "  ctx.fillRect(%.2f, %.2f, %.2f, %.2f);\n", left, top, w, h);
+        fprintf(state->fp, "  ctx.fillStyle = \"%s\";\n", css);
+        fprintf(state->fp, "  ctx.fillRect(%.2f, %.2f, %.2f, %.2f);\n", left, top, w, h);
     }
     if (gc->col != NA_INTEGER && gc->lty != LTY_BLANK) {
         char css[32];
         cnvs_colour_to_css(gc->col, css, sizeof(css));
-        cnvs_set_line_style(ctx->fp, gc);
-        fprintf(ctx->fp, "  ctx.strokeStyle = \"%s\";\n", css);
-        fprintf(ctx->fp, "  ctx.strokeRect(%.2f, %.2f, %.2f, %.2f);\n", left, top, w, h);
+        cnvs_set_line_style(state->fp, gc);
+        fprintf(state->fp, "  ctx.strokeStyle = \"%s\";\n", css);
+        fprintf(state->fp, "  ctx.strokeRect(%.2f, %.2f, %.2f, %.2f);\n", left, top, w, h);
     }
 }
 
 void cnvs_Circle(double x, double y, double r,
                   const pGEcontext gc, pDevDesc dd)
 {
-    cnvs_context *ctx = CNVS(dd);
+    cnvs_state *state = CNVS(dd);
 
-    fprintf(ctx->fp, "  ctx.beginPath();\n");
-    fprintf(ctx->fp, "  ctx.arc(%.2f, %.2f, %.2f, 0, 2 * Math.PI);\n", x, y, r);
+    fprintf(state->fp, "  ctx.beginPath();\n");
+    fprintf(state->fp, "  ctx.arc(%.2f, %.2f, %.2f, 0, 2 * Math.PI);\n", x, y, r);
 
     if (gc->fill != NA_INTEGER && !R_TRANSPARENT(gc->fill)) {
         char css[32];
         cnvs_colour_to_css(gc->fill, css, sizeof(css));
-        fprintf(ctx->fp, "  ctx.fillStyle = \"%s\";\n", css);
-        fprintf(ctx->fp, "  ctx.fill();\n");
+        fprintf(state->fp, "  ctx.fillStyle = \"%s\";\n", css);
+        fprintf(state->fp, "  ctx.fill();\n");
     }
     if (gc->col != NA_INTEGER && gc->lty != LTY_BLANK) {
         char css[32];
         cnvs_colour_to_css(gc->col, css, sizeof(css));
-        cnvs_set_line_style(ctx->fp, gc);
-        fprintf(ctx->fp, "  ctx.strokeStyle = \"%s\";\n", css);
-        fprintf(ctx->fp, "  ctx.stroke();\n");
+        cnvs_set_line_style(state->fp, gc);
+        fprintf(state->fp, "  ctx.strokeStyle = \"%s\";\n", css);
+        fprintf(state->fp, "  ctx.stroke();\n");
     }
 }
 
 void cnvs_Polyline(int n, double *x, double *y,
                     const pGEcontext gc, pDevDesc dd)
 {
-    cnvs_context *ctx = CNVS(dd);
+    cnvs_state *state = CNVS(dd);
     if (gc->col == NA_INTEGER || gc->lty == LTY_BLANK || n < 2) return;
 
     char css[32];
     cnvs_colour_to_css(gc->col, css, sizeof(css));
-    cnvs_set_line_style(ctx->fp, gc);
-    fprintf(ctx->fp, "  ctx.strokeStyle = \"%s\";\n", css);
-    fprintf(ctx->fp, "  ctx.beginPath();\n");
-    fprintf(ctx->fp, "  ctx.moveTo(%.2f, %.2f);\n", x[0], y[0]);
+    cnvs_set_line_style(state->fp, gc);
+    fprintf(state->fp, "  ctx.strokeStyle = \"%s\";\n", css);
+    fprintf(state->fp, "  ctx.beginPath();\n");
+    fprintf(state->fp, "  ctx.moveTo(%.2f, %.2f);\n", x[0], y[0]);
     for (int i = 1; i < n; i++) {
-        fprintf(ctx->fp, "  ctx.lineTo(%.2f, %.2f);\n", x[i], y[i]);
+        fprintf(state->fp, "  ctx.lineTo(%.2f, %.2f);\n", x[i], y[i]);
     }
-    fprintf(ctx->fp, "  ctx.stroke();\n");
+    fprintf(state->fp, "  ctx.stroke();\n");
 }
 
 void cnvs_Polygon(int n, double *x, double *y,
                    const pGEcontext gc, pDevDesc dd)
 {
-    cnvs_context *ctx = CNVS(dd);
+    cnvs_state *state = CNVS(dd);
     if (n < 2) return;
 
-    fprintf(ctx->fp, "  ctx.beginPath();\n");
-    fprintf(ctx->fp, "  ctx.moveTo(%.2f, %.2f);\n", x[0], y[0]);
+    fprintf(state->fp, "  ctx.beginPath();\n");
+    fprintf(state->fp, "  ctx.moveTo(%.2f, %.2f);\n", x[0], y[0]);
     for (int i = 1; i < n; i++) {
-        fprintf(ctx->fp, "  ctx.lineTo(%.2f, %.2f);\n", x[i], y[i]);
+        fprintf(state->fp, "  ctx.lineTo(%.2f, %.2f);\n", x[i], y[i]);
     }
-    fprintf(ctx->fp, "  ctx.closePath();\n");
+    fprintf(state->fp, "  ctx.closePath();\n");
 
     if (gc->fill != NA_INTEGER && !R_TRANSPARENT(gc->fill)) {
         char css[32];
         cnvs_colour_to_css(gc->fill, css, sizeof(css));
-        fprintf(ctx->fp, "  ctx.fillStyle = \"%s\";\n", css);
-        fprintf(ctx->fp, "  ctx.fill();\n");
+        fprintf(state->fp, "  ctx.fillStyle = \"%s\";\n", css);
+        fprintf(state->fp, "  ctx.fill();\n");
     }
     if (gc->col != NA_INTEGER && gc->lty != LTY_BLANK) {
         char css[32];
         cnvs_colour_to_css(gc->col, css, sizeof(css));
-        cnvs_set_line_style(ctx->fp, gc);
-        fprintf(ctx->fp, "  ctx.strokeStyle = \"%s\";\n", css);
-        fprintf(ctx->fp, "  ctx.stroke();\n");
+        cnvs_set_line_style(state->fp, gc);
+        fprintf(state->fp, "  ctx.strokeStyle = \"%s\";\n", css);
+        fprintf(state->fp, "  ctx.stroke();\n");
     }
 }
 
 void cnvs_Text(double x, double y, const char *str, double rot, double hadj,
                const pGEcontext gc, pDevDesc dd)
 {
-    cnvs_context *ctx = CNVS(dd);
+    cnvs_state *state = CNVS(dd);
     if (gc->col == NA_INTEGER || str == NULL) return;
 
     char css[32];
@@ -158,12 +158,12 @@ void cnvs_Text(double x, double y, const char *str, double rot, double hadj,
      * to (x, y), then rotated) rather than computing rotated coordinates
      * ourselves -- ctx.save()/ctx.restore() bracket the change so it
      * doesn't affect anything drawn afterwards. */
-    fprintf(ctx->fp, "  ctx.save();\n");
-    cnvs_set_font(ctx->fp, gc);
-    fprintf(ctx->fp, "  ctx.fillStyle = \"%s\";\n", css);
-    fprintf(ctx->fp, "  ctx.textAlign = \"%s\";\n", align);
-    fprintf(ctx->fp, "  ctx.textBaseline = \"alphabetic\";\n");
-    fprintf(ctx->fp, "  ctx.translate(%.2f, %.2f);\n", x, y);
+    fprintf(state->fp, "  ctx.save();\n");
+    cnvs_set_font(state->fp, gc);
+    fprintf(state->fp, "  ctx.fillStyle = \"%s\";\n", css);
+    fprintf(state->fp, "  ctx.textAlign = \"%s\";\n", align);
+    fprintf(state->fp, "  ctx.textBaseline = \"alphabetic\";\n");
+    fprintf(state->fp, "  ctx.translate(%.2f, %.2f);\n", x, y);
     if (rot != 0) {
         /* `rot` is in degrees, anticlockwise from the x-axis, measured in
          * DEVICE coordinates. Our device coordinates have y increasing
@@ -177,12 +177,12 @@ void cnvs_Text(double x, double y, const char *str, double rot, double hadj,
          * full-circle arc) rather than computed here in C, so there's
          * only one place in the output that ever needs to agree with
          * JavaScript's idea of pi. */
-        fprintf(ctx->fp, "  ctx.rotate(%.5f * Math.PI / 180);\n", -rot);
+        fprintf(state->fp, "  ctx.rotate(%.5f * Math.PI / 180);\n", -rot);
     }
     char *escaped = cnvs_js_escape(str);
-    fprintf(ctx->fp, "  ctx.fillText(\"%s\", 0, 0);\n", escaped);
+    fprintf(state->fp, "  ctx.fillText(\"%s\", 0, 0);\n", escaped);
     free(escaped);
-    fprintf(ctx->fp, "  ctx.restore();\n");
+    fprintf(state->fp, "  ctx.restore();\n");
 }
 
 double cnvs_StrWidth(const char *str, const pGEcontext gc, pDevDesc dd)
@@ -225,8 +225,8 @@ void cnvs_MetricInfo(int c, const pGEcontext gc,
 
 void cnvs_Clip(double x0, double x1, double y0, double y1, pDevDesc dd)
 {
-    cnvs_context *ctx = CNVS(dd);
-    if (ctx->page_count == 0) return; /* nothing drawn yet; nothing to clip */
+    cnvs_state *state = CNVS(dd);
+    if (state->page_count == 0) return; /* nothing drawn yet; nothing to clip */
 
     /* Canvas clip regions can only ever be *intersected* with the current
      * one -- there's no way to grow or replace a clip region without
@@ -234,8 +234,8 @@ void cnvs_Clip(double x0, double x1, double y0, double y1, pDevDesc dd)
      * just tells us "the clip region is now this rectangle" (not "add
      * this rectangle to the clip region"), we restore any previous clip
      * before applying the new one. */
-    if (ctx->clip_active) {
-        fprintf(ctx->fp, "  ctx.restore();\n");
+    if (state->clip_active) {
+        fprintf(state->fp, "  ctx.restore();\n");
     }
 
     double left = (x0 < x1) ? x0 : x1;
@@ -243,9 +243,9 @@ void cnvs_Clip(double x0, double x1, double y0, double y1, pDevDesc dd)
     double top = (y0 < y1) ? y0 : y1;
     double bottom = (y0 < y1) ? y1 : y0;
 
-    fprintf(ctx->fp, "  ctx.save();\n");
-    fprintf(ctx->fp, "  ctx.beginPath();\n");
-    fprintf(ctx->fp, "  ctx.rect(%.2f, %.2f, %.2f, %.2f);\n", left, top, right - left, bottom - top);
-    fprintf(ctx->fp, "  ctx.clip();\n");
-    ctx->clip_active = TRUE;
+    fprintf(state->fp, "  ctx.save();\n");
+    fprintf(state->fp, "  ctx.beginPath();\n");
+    fprintf(state->fp, "  ctx.rect(%.2f, %.2f, %.2f, %.2f);\n", left, top, right - left, bottom - top);
+    fprintf(state->fp, "  ctx.clip();\n");
+    state->clip_active = TRUE;
 }

@@ -62,16 +62,16 @@ typedef struct {
                             * `id="..."` in the final HTML. Owned by this
                             * struct: allocated in cnvs_device_(), freed in
                             * cnvs_Close(). */
-} cnvs_context;
+} cnvs_state;
 
 /* Convenience accessor: fetch our struct back out of a pDevDesc. */
-#define CNVS(dd) ((cnvs_context *) (dd)->deviceSpecific)
+#define CNVS(dd) ((cnvs_state *) (dd)->deviceSpecific)
 
 /* --- write.c: writing HTML/JS boilerplate text to the output file --- */
-void cnvs_write_header(cnvs_context *ctx);
-void cnvs_write_footer(cnvs_context *ctx);
-void cnvs_start_page(cnvs_context *ctx, const pGEcontext gc);
-void cnvs_end_page(cnvs_context *ctx);
+void cnvs_write_header(cnvs_state *state);
+void cnvs_write_footer(cnvs_state *state);
+void cnvs_start_page(cnvs_state *state, const pGEcontext gc);
+void cnvs_end_page(cnvs_state *state);
 char *cnvs_js_escape(const char *in);
 
 /* --- style.c: translating R graphics-parameter values into CSS/JS --- */
