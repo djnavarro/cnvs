@@ -359,7 +359,7 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_,
      * that every drawing callback needs in order to write the HTML/JS
      * output. */
     cnvs_state *state = cnvs_setup_state(file, width, height, 
-                                           standalone, id_prefix);
+                                         standalone, id_prefix);
 
     /* Allocate the device description struct, dd -- calloc() only
      * allocates and zeroes it; the real initialisation happens just below,
