@@ -274,7 +274,8 @@ static cnvs_context *cnvs_setup_context(const char *file, int width, int height,
  * This is everything the engine needs to know about the device *before*
  * it starts calling drawing callbacks; wiring up those callbacks
  * themselves is cnvs_setup_callbacks()'s job instead. */
-static void cnvs_setup_description(pDevDesc dd, int width, int height, double pointsize, int bg)
+static void cnvs_setup_description(pDevDesc dd, int width, int height, 
+                                   double pointsize, int bg)
 {
     /* We model the canvas the same way a screen/bitmap device would:
      * origin at the top-left, y increasing downward, one device unit
@@ -293,12 +294,13 @@ static void cnvs_setup_description(pDevDesc dd, int width, int height, double po
     dd->xCharOffset = CNVS_XCHAR_OFFSET;
     dd->yCharOffset = CNVS_YCHAR_OFFSET;
     dd->yLineBias = CNVS_YLINE_BIAS;
-    dd->ipr[0] = dd->ipr[1] = 1.0 / 96.0; /* 96 px per inch, like a typical screen */
+    dd->ipr[0] = dd->ipr[1] = 1.0 / 96.0; /* 96 px per inch */
     dd->cra[0] = 0.9 * pointsize * (96.0 / 72.0);
     dd->cra[1] = 1.2 * pointsize * (96.0 / 72.0);
     dd->gamma = 1;
 
     dd->canClip = TRUE;        /* we implement the clip() callback */
+
     /* deviceClip overrides canClip, telling the engine to leave ALL
      * clipping to us rather than also doing its own clipping math on top
      * of ours (see the deviceClip field's comment in
@@ -307,8 +309,9 @@ static void cnvs_setup_description(pDevDesc dd, int width, int height, double po
      * ctx.clip() already does for us -- so we leave the engine's
      * clipping on as a second line of defence instead of overriding it. */
     dd->deviceClip = FALSE;
+    
     dd->canChangeGamma = FALSE;
-    dd->canHAdj = 1;           /* we honour hadj at the 3 standard values: 0, 0.5, 1 */
+    dd->canHAdj = 1;  /* we honour hadj at the 3 standard values: 0, 0.5, 1 */
 
     dd->startps = pointsize;
     dd->startcol = R_RGB(0, 0, 0);
@@ -317,11 +320,11 @@ static void cnvs_setup_description(pDevDesc dd, int width, int height, double po
     dd->startfont = 1;
     dd->startgamma = 1;
 
-    dd->haveTransparency = 2;   /* yes -- colours carry an alpha channel through to rgba() */
-    dd->haveTransparentBg = 2;  /* yes -- a fully transparent background is supported */
-    dd->haveRaster = 1;         /* no -- the raster() callback isn't implemented */
-    dd->haveCapture = 1;        /* no -- the cap() callback isn't implemented */
-    dd->haveLocator = 1;        /* no -- the locator() callback isn't implemented */
+    dd->haveTransparency = 2;   /* yes -- colours have an alpha channel */
+    dd->haveTransparentBg = 2;  /* yes -- fully transparent background is okay */
+    dd->haveRaster = 1;         /* no -- raster() callback isn't implemented */
+    dd->haveCapture = 1;        /* no -- cap() callback isn't implemented */
+    dd->haveLocator = 1;        /* no -- locator() callback isn't implemented */
 
     /* Unlike a screen device, a file-based device like this one (or
      * pdf()/svglite()) doesn't need R to keep a display list around for
