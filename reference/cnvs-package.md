@@ -27,7 +27,7 @@ The package's C source, in `src/`, is organised by responsibility:
 - `draw.c` – the drawing callbacks: lines, rectangles, circles,
   polygons, text, clipping.
 
-- `colour.c` – translating R's packed colour integers, line styles, and
+- `style.c` – translating R's packed colour integers, line styles, and
   font descriptions into CSS/JS.
 
 - `write.c` – the HTML/JS text templates everything else writes into.

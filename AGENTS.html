@@ -63,7 +63,7 @@ src/
                      # start here to understand how a device plugs into R
   draw.c            # drawing callbacks: line, rect, circle, polyline,
                      # polygon, text, clip, strWidth, metricInfo
-  colour.c          # R colour ints / line styles / fonts -&gt; CSS/JS text
+  style.c           # R colour ints / line styles / fonts -&gt; CSS/JS text
   write.c           # the HTML/JS text templates everything else writes into
   init.c            # native routine registration (R_init_cnvs)
 
@@ -90,7 +90,7 @@ tmp/                # scratch scripts (gitignored) -- not part of the package</c
 <ul><li>Say <strong>why</strong>, not just what. <code>ctx-&gt;clip_active</code> being restored before a new clip is applied is obvious from the code; <em>why</em> (canvas clip regions can only ever be intersected, never grown, without a restore) is the part worth a comment.</li>
 <li>When a field, constant, or calling convention comes from R’s graphics engine rather than from this package’s own design, say so and point at where it’s documented (<code>R_ext/GraphicsDevice.h</code>, <code>R_ext/GraphicsEngine.h</code>, or a specific macro name) rather than asserting it as if it were an arbitrary implementation choice.</li>
 <li>Flag approximations and limitations where they live, not just in the README – e.g. <code>cnvs_StrWidth()</code>’s heuristic explains in its own comment why an exact answer isn’t possible here, rather than silently returning a number that looks authoritative.</li>
-<li>New top-level functions get a short header comment explaining what triggers the call and what it’s responsible for, matching the style already in <code>draw.c</code>/<code>device.c</code>/<code>colour.c</code>/<code>write.c</code>.</li>
+<li>New top-level functions get a short header comment explaining what triggers the call and what it’s responsible for, matching the style already in <code>draw.c</code>/<code>device.c</code>/<code>style.c</code>/<code>write.c</code>.</li>
 </ul><p>This bar applies to C and R code alike. It’s fine – expected, even – for comments here to be longer relative to the code than they would be in a normal package.</p>
 </div>
 <div class="section level2">
