@@ -291,9 +291,9 @@ static void cnvs_setup_description(pDevDesc dd, int width, int height,
     dd->clipTop = 0;
     dd->clipBottom = height;
 
-    dd->xCharOffset = CNVS_XCHAR_OFFSET;
-    dd->yCharOffset = CNVS_YCHAR_OFFSET;
-    dd->yLineBias = CNVS_YLINE_BIAS;
+    dd->xCharOffset = CNVS_XCHAR_OFFSET;  /* defined as 0.4900 */
+    dd->yCharOffset = CNVS_YCHAR_OFFSET;  /* defined as 0.3333 */
+    dd->yLineBias = CNVS_YLINE_BIAS;      /* defined as 0.2000 */
     dd->ipr[0] = dd->ipr[1] = 1.0 / 96.0; /* 96 px per inch */
     dd->cra[0] = 0.9 * pointsize * (96.0 / 72.0);
     dd->cra[1] = 1.2 * pointsize * (96.0 / 72.0);
@@ -309,7 +309,7 @@ static void cnvs_setup_description(pDevDesc dd, int width, int height,
      * ctx.clip() already does for us -- so we leave the engine's
      * clipping on as a second line of defence instead of overriding it. */
     dd->deviceClip = FALSE;
-    
+
     dd->canChangeGamma = FALSE;
     dd->canHAdj = 1;  /* we honour hadj at the 3 standard values: 0, 0.5, 1 */
 
