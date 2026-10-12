@@ -70,7 +70,7 @@ are the documentation.
   measurement, because there is no portable way to get real font metrics
   without an actual rendering engine.
 - Only one rectangular clip region is tracked at a time (`clip_active`
-  in `cnvs_context`); a new
+  in `cnvs_state`); a new
   [`clip()`](https://rdrr.io/r/graphics/clip.html) call always restores
   any previous clip before applying the next one.
 
