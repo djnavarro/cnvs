@@ -349,8 +349,15 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
     R_GE_checkVersionOrDie(R_GE_version);
     R_CheckDeviceAvailable();
 
+    /* Create the data structure that holds our own per-device state (the
+     * open file handle, and bookkeeping like page count and clip state)
+     * that every drawing callback needs in order to write the HTML/JS
+     * output. */
     cnvs_context *ctx = cnvs_setup_context(file, width, height, standalone, id_prefix);
 
+    /* Allocate the device description struct, dd -- calloc() only
+     * allocates and zeroes it; the real initialisation happens just below,
+     * in cnvs_setup_description(). */
     pDevDesc dd = (pDevDesc) calloc(1, sizeof(DevDesc));
     if (dd == NULL) {
         fclose(ctx->fp);
@@ -359,7 +366,16 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
         error("cnvs: could not allocate device description");
     }
 
+    /* Describe this device to the graphics engine -- its size, character/
+     * font metrics, starting graphical parameters, and which optional
+     * features it supports. That's all set up in this helper. */
     cnvs_setup_description(dd, width, height, pointsize, bg);
+
+    /* `deviceSpecific` is the slot R's DevDesc struct dedicates to a
+     * device's own private data (see the comment on cnvs_context in
+     * cnvs.h). For cnvs, that's our own ctx -- the open file handle and
+     * per-device state every drawing callback needs, accessed back out via
+     * the CNVS(dd) macro. */
     dd->deviceSpecific = ctx;
 
     /* `deviceVersion` tells the graphics engine which bundle of features
@@ -379,6 +395,9 @@ SEXP cnvs_device_(SEXP file_, SEXP width_, SEXP height_, SEXP pointsize_, SEXP b
      * this kind of crash for whatever grid feature touches groups. */
     dd->deviceVersion = R_GE_definitions;
 
+    /* Every R graphics device must specify callback functions that get
+     * triggered whenever the device is asked to take action. Those get
+     * set up in this helper function. */
     cnvs_setup_callbacks(dd);
 
     pGEDevDesc gdd = GEcreateDevDesc(dd);
