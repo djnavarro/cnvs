@@ -235,7 +235,7 @@ static void cnvs_setup_callbacks(pDevDesc dd)
  * to also clean up here; cnvs_device_() only needs to allocate `dd` once
  * it knows state is ready. */
 static cnvs_state *cnvs_setup_state(const char *file, int width, int height,
-                                         Rboolean standalone, const char *id_prefix)
+                                    Rboolean standalone, const char *id_prefix)
 {
     cnvs_state *state = (cnvs_state *) calloc(1, sizeof(cnvs_state));
     if (state == NULL) error("cnvs: could not allocate device state");
