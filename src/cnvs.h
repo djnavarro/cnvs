@@ -111,10 +111,10 @@ void cnvs_Polygon(int n, double *x, double *y,
                    const pGEcontext gc, pDevDesc dd);
 void cnvs_Text(double x, double y, const char *str, double rot, double hadj,
                const pGEcontext gc, pDevDesc dd);
-void cnvs_Clip(double x0, double x1, double y0, double y1, pDevDesc dd);
 double cnvs_StrWidth(const char *str, const pGEcontext gc, pDevDesc dd);
 void cnvs_MetricInfo(int c, const pGEcontext gc,
                       double *ascent, double *descent, double *width,
                       pDevDesc dd);
+void cnvs_Clip(double x0, double x1, double y0, double y1, pDevDesc dd);
 
 #endif /* CNVS_H */

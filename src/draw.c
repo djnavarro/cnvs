@@ -171,40 +171,18 @@ void cnvs_Text(double x, double y, const char *str, double rot, double hadj,
          * convention that "anticlockwise" usually assumes -- so, exactly
          * like R's own Cairo-based raster devices do for the same reason,
          * we negate the angle before calling ctx.rotate() to keep the
-         * visual rotation direction consistent with user expectation. */
-        fprintf(ctx->fp, "  ctx.rotate(%.5f);\n", -rot * 3.14159265358979323846 / 180.0);
+         * visual rotation direction consistent with user expectation. The
+         * degrees-to-radians conversion itself is left to the generated
+         * JS (via Math.PI, as cnvs_Circle() already does for its
+         * full-circle arc) rather than computed here in C, so there's
+         * only one place in the output that ever needs to agree with
+         * JavaScript's idea of pi. */
+        fprintf(ctx->fp, "  ctx.rotate(%.5f * Math.PI / 180);\n", -rot);
     }
     char *escaped = cnvs_js_escape(str);
     fprintf(ctx->fp, "  ctx.fillText(\"%s\", 0, 0);\n", escaped);
     free(escaped);
     fprintf(ctx->fp, "  ctx.restore();\n");
-}
-
-void cnvs_Clip(double x0, double x1, double y0, double y1, pDevDesc dd)
-{
-    cnvs_context *ctx = CNVS(dd);
-    if (ctx->page_count == 0) return; /* nothing drawn yet; nothing to clip */
-
-    /* Canvas clip regions can only ever be *intersected* with the current
-     * one -- there's no way to grow or replace a clip region without
-     * first ctx.restore()-ing back to a state that didn't have it. Since R
-     * just tells us "the clip region is now this rectangle" (not "add
-     * this rectangle to the clip region"), we restore any previous clip
-     * before applying the new one. */
-    if (ctx->clip_active) {
-        fprintf(ctx->fp, "  ctx.restore();\n");
-    }
-
-    double left = (x0 < x1) ? x0 : x1;
-    double right = (x0 < x1) ? x1 : x0;
-    double top = (y0 < y1) ? y0 : y1;
-    double bottom = (y0 < y1) ? y1 : y0;
-
-    fprintf(ctx->fp, "  ctx.save();\n");
-    fprintf(ctx->fp, "  ctx.beginPath();\n");
-    fprintf(ctx->fp, "  ctx.rect(%.2f, %.2f, %.2f, %.2f);\n", left, top, right - left, bottom - top);
-    fprintf(ctx->fp, "  ctx.clip();\n");
-    ctx->clip_active = TRUE;
 }
 
 double cnvs_StrWidth(const char *str, const pGEcontext gc, pDevDesc dd)
@@ -243,4 +221,31 @@ void cnvs_MetricInfo(int c, const pGEcontext gc,
     }
     double avg_char_width = (gc->fontface == 2 || gc->fontface == 4) ? 0.60 : 0.55;
     *width = avg_char_width * size_px;
+}
+
+void cnvs_Clip(double x0, double x1, double y0, double y1, pDevDesc dd)
+{
+    cnvs_context *ctx = CNVS(dd);
+    if (ctx->page_count == 0) return; /* nothing drawn yet; nothing to clip */
+
+    /* Canvas clip regions can only ever be *intersected* with the current
+     * one -- there's no way to grow or replace a clip region without
+     * first ctx.restore()-ing back to a state that didn't have it. Since R
+     * just tells us "the clip region is now this rectangle" (not "add
+     * this rectangle to the clip region"), we restore any previous clip
+     * before applying the new one. */
+    if (ctx->clip_active) {
+        fprintf(ctx->fp, "  ctx.restore();\n");
+    }
+
+    double left = (x0 < x1) ? x0 : x1;
+    double right = (x0 < x1) ? x1 : x0;
+    double top = (y0 < y1) ? y0 : y1;
+    double bottom = (y0 < y1) ? y1 : y0;
+
+    fprintf(ctx->fp, "  ctx.save();\n");
+    fprintf(ctx->fp, "  ctx.beginPath();\n");
+    fprintf(ctx->fp, "  ctx.rect(%.2f, %.2f, %.2f, %.2f);\n", left, top, right - left, bottom - top);
+    fprintf(ctx->fp, "  ctx.clip();\n");
+    ctx->clip_active = TRUE;
 }
