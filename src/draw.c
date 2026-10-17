@@ -50,6 +50,7 @@ void cnvs_Line(double x1, double y1, double x2, double y2,
 void cnvs_Rect(double x0, double y0, double x1, double y1,
                const pGEcontext gc, pDevDesc dd)
 {
+    /* pointer to the device-specific state */
     cnvs_state *state = CNVS(dd);
 
     /* (x0,y0) and (x1,y1) are opposite corners, but not guaranteed to
@@ -60,6 +61,9 @@ void cnvs_Rect(double x0, double y0, double x1, double y1,
     double w = fabs(x1 - x0);
     double h = fabs(y1 - y0);
 
+    /* fill and stroke are independent -- a rectangle can have either, both,
+     * or neither -- so each is checked and drawn separately, rather than
+     * sharing one early-return guard the way cnvs_Line() does */
     if (gc->fill != NA_INTEGER && !R_TRANSPARENT(gc->fill)) {
         char css[32];
         cnvs_colour_to_css(gc->fill, css, sizeof(css));
@@ -78,11 +82,18 @@ void cnvs_Rect(double x0, double y0, double x1, double y1,
 void cnvs_Circle(double x, double y, double r,
                   const pGEcontext gc, pDevDesc dd)
 {
+    /* pointer to the device-specific state */
     cnvs_state *state = CNVS(dd);
 
+    /* trace the circular path unconditionally -- ctx.arc() has to run
+     * before either ctx.fill() or ctx.stroke() can act on it, so unlike
+     * cnvs_Rect() there's no single colour/line-type check that would let
+     * us skip this step entirely */
     fprintf(state->fp, "  ctx.beginPath();\n");
     fprintf(state->fp, "  ctx.arc(%.2f, %.2f, %.2f, 0, 2 * Math.PI);\n", x, y, r);
 
+    /* fill, then stroke the same path -- same independence as
+     * cnvs_Rect(): a circle can have either, both, or neither */
     if (gc->fill != NA_INTEGER && !R_TRANSPARENT(gc->fill)) {
         char css[32];
         cnvs_colour_to_css(gc->fill, css, sizeof(css));
@@ -101,13 +112,23 @@ void cnvs_Circle(double x, double y, double r,
 void cnvs_Polyline(int n, double *x, double *y,
                     const pGEcontext gc, pDevDesc dd)
 {
+    /* pointer to the device-specific state */
     cnvs_state *state = CNVS(dd);
+
+    /* nothing to draw if there's no stroke colour, the line type itself
+     * is invisible, or there are fewer than two points to connect */
     if (gc->col == NA_INTEGER || gc->lty == LTY_BLANK || n < 2) return;
 
+    /* convert colour to CSS, and write the line's stroke style straight
+     * to the output file -- exactly as cnvs_Line() does */
     char css[32];
     cnvs_colour_to_css(gc->col, css, sizeof(css));
     cnvs_set_line_style(state->fp, gc);
     fprintf(state->fp, "  ctx.strokeStyle = \"%s\";\n", css);
+
+    /* trace one continuous path through every point, then stroke it once
+     * at the end -- a polyline is unfilled by definition, so there's no
+     * fill step the way there is in cnvs_Polygon() below */
     fprintf(state->fp, "  ctx.beginPath();\n");
     fprintf(state->fp, "  ctx.moveTo(%.2f, %.2f);\n", x[0], y[0]);
     for (int i = 1; i < n; i++) {
@@ -119,9 +140,14 @@ void cnvs_Polyline(int n, double *x, double *y,
 void cnvs_Polygon(int n, double *x, double *y,
                    const pGEcontext gc, pDevDesc dd)
 {
+    /* pointer to the device-specific state */
     cnvs_state *state = CNVS(dd);
-    if (n < 2) return;
+    if (n < 2) return; /* not enough points to form a shape */
 
+    /* trace the path and close it back to the starting point -- unlike
+     * cnvs_Polyline() above, a polygon's outline is a closed loop, which
+     * ctx.closePath() draws explicitly rather than leaving the last point
+     * unconnected to the first */
     fprintf(state->fp, "  ctx.beginPath();\n");
     fprintf(state->fp, "  ctx.moveTo(%.2f, %.2f);\n", x[0], y[0]);
     for (int i = 1; i < n; i++) {
@@ -129,6 +155,9 @@ void cnvs_Polygon(int n, double *x, double *y,
     }
     fprintf(state->fp, "  ctx.closePath();\n");
 
+    /* fill, then stroke the same closed path -- both act on whatever path
+     * is still "current" from the ctx.beginPath()/ctx.closePath() above,
+     * so neither step needs to trace the path again */
     if (gc->fill != NA_INTEGER && !R_TRANSPARENT(gc->fill)) {
         char css[32];
         cnvs_colour_to_css(gc->fill, css, sizeof(css));
@@ -147,9 +176,16 @@ void cnvs_Polygon(int n, double *x, double *y,
 void cnvs_Text(double x, double y, const char *str, double rot, double hadj,
                const pGEcontext gc, pDevDesc dd)
 {
+    /* pointer to the device-specific state */
     cnvs_state *state = CNVS(dd);
+
+    /* nothing to draw without a colour to draw it in, or without a string
+     * to draw at all (the engine can call this with str == NULL) */
     if (gc->col == NA_INTEGER || str == NULL) return;
 
+    /* convert colour to CSS; font is handled separately below via
+     * cnvs_set_font(), since it needs several gc fields combined (size,
+     * face, family) rather than a single packed colour int */
     char css[32];
     cnvs_colour_to_css(gc->col, css, sizeof(css));
 
@@ -187,12 +223,19 @@ void cnvs_Text(double x, double y, const char *str, double rot, double hadj,
          * JavaScript's idea of pi. */
         fprintf(state->fp, "  ctx.rotate(%.5f * Math.PI / 180);\n", -rot);
     }
+    /* fillText() draws the string itself; cnvs_js_escape() guards against
+     * characters (quotes, backslashes, newlines) in `str` that would
+     * otherwise break out of the JS string literal we're writing it into */
     char *escaped = cnvs_js_escape(str);
     fprintf(state->fp, "  ctx.fillText(\"%s\", 0, 0);\n", escaped);
     free(escaped);
     fprintf(state->fp, "  ctx.restore();\n");
 }
 
+/* Called whenever the graphics engine needs to know how wide a string
+ * would be at the current font -- e.g. to centre a title, size a legend
+ * box, or lay out axis labels -- which it must do *before* any drawing
+ * happens, so this has to answer without actually rendering anything. */
 double cnvs_StrWidth(const char *str, const pGEcontext gc, pDevDesc dd)
 {
     /* There's no way to get an *exact* text width without an actual font
@@ -209,6 +252,9 @@ double cnvs_StrWidth(const char *str, const pGEcontext gc, pDevDesc dd)
     return strlen(str) * avg_char_width * size_px;
 }
 
+/* Called for the same layout purposes as cnvs_StrWidth() above, but asks
+ * about a single character's vertical extent and width -- used e.g. to
+ * work out line spacing -- rather than a whole string's width. */
 void cnvs_MetricInfo(int c, const pGEcontext gc,
                       double *ascent, double *descent, double *width,
                       pDevDesc dd)
@@ -231,8 +277,14 @@ void cnvs_MetricInfo(int c, const pGEcontext gc,
     *width = avg_char_width * size_px;
 }
 
+/* Called whenever R establishes a new clipping rectangle -- e.g. so that
+ * a line being drawn doesn't spill outside the plot region. We only get
+ * called at all because device.c sets dd->canClip = TRUE, promising the
+ * engine that we honour this ourselves rather than needing it to clip on
+ * our behalf. */
 void cnvs_Clip(double x0, double x1, double y0, double y1, pDevDesc dd)
 {
+    /* pointer to the device-specific state */
     cnvs_state *state = CNVS(dd);
     if (state->page_count == 0) return; /* nothing drawn yet; nothing to clip */
 
