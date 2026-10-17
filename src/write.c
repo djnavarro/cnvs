@@ -45,7 +45,7 @@ void cnvs_start_page(cnvs_state *state, const pGEcontext gc)
     state->page_count++;
     fprintf(state->fp,
         "<canvas id=\"%s-%d\" width=\"%d\" height=\"%d\" "
-        "style=\"border: 1px solid #ccc; margin-bottom: 1em;\"></canvas>\n"
+        "style=\"border: none; margin-bottom: 1em;\"></canvas>\n"
         "<script>\n"
         "(function() {\n"
         "  var canvas = document.getElementById(\"%s-%d\");\n"
