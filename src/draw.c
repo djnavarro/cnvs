@@ -26,12 +26,20 @@
 void cnvs_Line(double x1, double y1, double x2, double y2,
                const pGEcontext gc, pDevDesc dd)
 {
+    /* pointer to the device-specific state */
     cnvs_state *state = CNVS(dd);
+
+    /* nothing to draw if there's no stroke colour, or the line type
+     * itself is invisible */
     if (gc->col == NA_INTEGER || gc->lty == LTY_BLANK) return;
 
+    /* convert colour to CSS, and write the line's stroke style
+     * (width, caps, joins, dashing) straight to the output file */
     char css[32];
     cnvs_colour_to_css(gc->col, css, sizeof(css));
     cnvs_set_line_style(state->fp, gc);
+
+    /* write the JS that actually strokes the line itself */
     fprintf(state->fp, "  ctx.strokeStyle = \"%s\";\n", css);
     fprintf(state->fp, "  ctx.beginPath();\n");
     fprintf(state->fp, "  ctx.moveTo(%.2f, %.2f);\n", x1, y1);
